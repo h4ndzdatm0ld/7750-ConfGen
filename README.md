@@ -1,4 +1,4 @@
-# 7750-NewDeployment-j2
+# 7750-ConfGen
 A faster, easier way to build a virtual lab configuration for the Nokia 7750s utilizing Netmiko, Jinja2 and Yaml. 
 
 This project is aimed at speeding up the configuration process of a virtual lab. 
