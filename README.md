@@ -6,8 +6,8 @@ The project utilizes Netmiko to configure devices. Therefore, IP connectivity mu
 
 Things to note regarding the configuration:
 
-- The template takes advantage of a policy-statement to create a full-mesh of MPLS LSPs.
-- Utilizes OSPF with Traffic-Engineering. However, the MPLS-LSPs are hard set to Facility Fast Re-Route only.
+- The template takes advantage of a policy-statement and auto-lsp template to create a full-mesh of MPLS LSPs.
+- Utilizes OSPF with Traffic-Engineering. However, the MPLS-LSPs are hard set to Facility Fast Re-Route due to auto-lsp.
 - The template includes a pw-template and leverages BGP-AD(Auto-Discovery) to auto-create MESH-SDPs across a VPLS.
 - The template includes an LDP template to establish Targeted-LDP sessions.
 
