@@ -1,0 +1,209 @@
+system name {{host}}
+router interface system address {{SystemIP}}/32
+{%- for ip in prefix %}
+router policy-options
+begin
+prefix-list {{ ip[0] }} 
+prefix {{ ip[1] }}
+exit
+commit
+exit all
+{%- endfor %}
+
+/configure port 1/1/1 
+no shut
+ethernet mtu 9212
+/configure port 1/1/2
+no shut
+ethernet mtu 9212
+/configure port 1/1/3
+no shut
+ethernet mtu 9212
+/configure port 1/1/4 
+no shut
+ethernet mtu 9212
+/configure port 1/1/5 
+no shut
+ethernet mtu 9212
+exit all
+
+{%- if policy %}
+/configure router policy-options 
+begin 
+policy-statement {{policy}}
+entry 10
+from prefix-list "System-IPz"
+action accept
+/configure router policy-options commit
+exit all
+{%- endif %}
+
+
+{%- for iface in interfaces %}
+/configure router interface {{ iface[0] }} 
+address {{ iface[1] }}
+port {{ iface[2] }}
+{%- endfor %}
+
+{%- if mpls %}
+/configure router ldp
+targeted-session
+peer-template "TLDP-Mesh"
+tunneling
+no shutdown
+exit
+peer-template-map peer-template "TLDP-Mesh" policy "Remote-PEz"
+exit all
+/configure router ldp no shut
+/configure router mpls no shut
+/configure router rsvp no shut
+/configure router mpls
+path "loose"
+no shutdown
+exit
+lsp-template "Full-Mesh" mesh-p2p
+default-path "loose"
+cspf
+fast-reroute facility
+exit
+no shutdown
+exit
+auto-lsp lsp-template "Full-Mesh" policy "Remote-PEz"
+exit all
+{%- endif %}
+
+{%- for iface in mplsInterfaces %}
+/configure router mpls interface {{ iface[0] }} 
+no shut
+{%- endfor %}
+
+/configure router autonomous-system {{bgp_AS}}
+
+/configure router bgp group mp-BGP
+family vpn-ipv4 l2-vpn
+peer-as {{bgp_AS}}
+
+{%- for peer in ibgp_Nxbrs %}
+neighbor {{ peer[0] }} 
+exit
+neighbor {{ peer[1] }}
+exit
+neighbor {{ peer[2] }}
+exit
+neighbor {{ peer[3] }}
+exit all
+{%- endfor %}
+
+{%- if mpls_shortcuts %}
+/configure router bgp
+next-hop-resolution
+shortcut-tunnel
+family ipv4
+resolution-filter
+rsvp
+exit
+resolution filter
+{%- endif %}
+
+{%- if mpls_shortcuts %}
+/configure router bgp
+next-hop-resolution
+shortcut-tunnel
+family ipv4
+resolution-filter
+rsvp
+exit
+resolution filter
+exit all
+{%- endif %}
+
+{% if bgp_rapidUpdate %}
+/configure router bgp rapid-update l2-vpn
+{%- endif %}
+
+{%- if rsvp_shortcut %}
+/configure router ospf rsvp-shortcut
+{% endif %}
+
+{%- if ospf_trf_eng %}
+/configure router ospf traffic-engineering
+{%- endif %}
+{%- if ospf_ldprsvp %}
+/configure router ospf ldp-over-rsvp
+{%- endif %}
+exit all
+
+{% for x in ospf_interfaces %}
+/configure router ospf 
+area {{x[0]}} interface system
+passive
+exit
+area {{x[0]}} interface {{x[1]}}
+interface-type point-to-point
+exit
+{% endfor %}
+/configure system chassis-mode c 
+/configure service pw-template 2 create
+hash-label
+split-horizon-group "vpls-shg"
+exit
+/configure service vpls {{mgmt_vpls}} customer 1 create
+service-mtu 9100
+allow-ip-int-bind
+exit
+bgp
+route-distinguisher {{bgp_AS}}:{{mgmt_vpls}}
+route-target export target:{{bgp_AS}}:{{mgmt_vpls}} import target:{{bgp_AS}}:{{mgmt_vpls}}
+pw-template-binding 2 split-horizon-group "vpls-shg" import-rt "target:{{bgp_AS}}:{{mgmt_vpls}}"
+exit
+exit
+bgp-ad
+vpls-id {{bgp_AS}}:{{mgmt_vpls}}
+vsi-id 
+prefix {{ SystemIP }}
+exit
+no shutdown
+exit
+stp
+shutdown
+exit
+service-name "NODE_L2_MGMT"
+exit
+/configure service vpls {{mgmt_vpls}} no shutdown
+
+{% if mgmt_SAP %}
+/configure port {{mgmt_SAP}}
+shutdown
+ethernet mode access
+ethernet encap dot1q
+ethernet mtu 9212
+no shut
+/configure service vpls {{mgmt_vpls}}
+sap {{mgmt_SAP}}:{{mgmt_vpls}} create
+{% endif %}
+
+{% if ies_id %}
+/configure service ies {{ies_id}} customer 1 create
+interface "L3_NODE_MGMT" create
+address {{hostip}}/24
+vpls "NODE_L2_MGMT"
+exit all
+{% endif %}
+
+
+/configure service vprn {{ vprn }} customer 1 create
+autonomous-system {{ bgp_AS }}
+route-distinguisher {{ bgp_AS }}:{{ vprn }}
+auto-bind-tunnel
+    resolution any
+exit
+vrf-target target:{{ bgp_AS }}:{{ vprn }}
+no shut
+
+/configure router bgp group mp-BGP
+neighbor {{SystemIP}}
+shutdown
+back
+no neighbor {{SystemIP}}
+exit all
+/admin save

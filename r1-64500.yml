@@ -1,0 +1,31 @@
+---
+R1-64500:
+  hostip: 10.0.0.210
+  SystemIP: 10.10.10.1 #/32 is implied - do NOT add.
+  prefix: 
+    - ['System-IPz', '10.10.10.0/24 prefix-length-range 32-32']
+  policy: Remote-PEz #Accept all System-IPz prefixes.
+  interfaces:
+    # Interface[0], IP/Mask[1], Port[2] | Add as many as you want.
+    - ['TO_R2', '10.1.2.1/24', '1/1/2']
+  mpls: true
+  mplsInterfaces:
+    - ['TO_R2']
+  bgp_AS: 64500
+  ibgp_Nxbrs:
+    - ['10.10.10.1', '10.10.10.2', '10.10.10.3', '10.10.10.4']
+  mpls_shortcuts: true
+  bgp_rapidUpdate: true
+  ospf_trf_eng: true
+  ospf_ldprsvp: true
+        # area , iface1, iface2
+  ospf_interfaces: 
+      - ['0.0.0.0', 'TO_R2']
+
+  mgmt_vpls: 300
+  # Make sure this is set to false if no sap needed.
+  mgmt_SAP: 1/1/1
+  ies_id: 301
+  vprn: 645
+    
+    
