@@ -5,6 +5,7 @@ import time
 from netmiko import Netmiko
 import threading
 
+# Update the yaml file name for the specific router you wish to connect to.
 yaml_file = 'r4-64500.yml'
 jinja_template = 'template.j2'
 
@@ -16,7 +17,7 @@ def confgen(vars):
     template = jinja2.Template(tfile)
     cfg_list = template.render(vars)
 
-    # Connect directly to host via telnet on the specified port
+    # Connect directly to host via SSH on the specified port
     conn = Netmiko(host=vars['hostip'], device_type='alcatel_sros', username="admin", password="admin")
 
     # Send generated commands to host
@@ -34,7 +35,8 @@ def confgen(vars):
 with open(yaml_file) as f:
     read_yaml = yaml.load(f)  # Converts YAML file to dictionary
 
-# Take imported YAML dictionary and start multi-threaded configuration generation
+# Take imported YAML dictionary and start multi-threaded configuration generation.
+# You could condense all yaml files into one if you wanted.
 for hosts, vars in read_yaml.items():
     # Add host to vars dictionary
     host = {'host': hosts}

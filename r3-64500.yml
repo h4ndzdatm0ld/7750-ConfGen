@@ -1,7 +1,11 @@
 ---
+
+# The Jinja template has a lot more configuration than what's specified here. Review the entire template to make sure it's what you want.
+# There are several unseen commands that run in the background, such as chassis mode, PW-Templates, etc.
+
 R3-64500-RR:
   hostip: 10.0.0.213
-  SystemIP: 10.10.10.3 #/32 is implied - do NOT add.
+  SystemIP: 10.10.10.3 #/32 is implied - do NOT add. This variable gets re-used several times without the mask.
   prefix: 
     - ['System-IPz', '10.10.10.0/24 prefix-length-range 32-32']
   policy: Remote-PEz #Accept all System-IPz prefixes.
@@ -24,7 +28,7 @@ R3-64500-RR:
       - ['0.0.0.0', 'TO_R2']
 
   mgmt_vpls: 300
-  # Make sure this is set to false if no sap needed.
+  # Make sure this is left blank if no sap needed. This sap would be facing a MGMT - Switch for outbound L3 connectivity to manage nodes through IES/VPLS.
   mgmt_SAP: 
   ies_id: 301
   vprn: 645
